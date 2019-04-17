@@ -136,6 +136,8 @@ public class HyperLog {
                 SharedPreferences sharedPref = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
                 URL = sharedPref.getString("URL", null);
             }
+
+            pushLogs(context, null);
         }
     }
 
@@ -611,7 +613,9 @@ public class HyperLog {
                         responses.add(response);
                         logsCount[0]--;
                         if(logsCount[0]==0){
-                            callback.onDone(responses, errors);
+                            if(callback!=null) {
+                                callback.onDone(responses, errors);
+                            }
                         }
                     }
 
@@ -621,7 +625,9 @@ public class HyperLog {
                         logsCount[0]--;
                         errors.add(HLErrorResponse);
                         if(logsCount[0]==0){
-                            callback.onDone(responses, errors);
+                            if(callback!=null) {
+                                callback.onDone(responses, errors);
+                            }
                         }
                     }
                 };

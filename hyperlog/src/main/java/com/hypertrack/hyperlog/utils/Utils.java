@@ -100,7 +100,8 @@ public class Utils {
     public static byte[] getByteData(List<DeviceLogModel> deviceLogs) {
         StringBuilder stringBuilder = new StringBuilder();
         for (DeviceLogModel deviceLog : deviceLogs) {
-            stringBuilder.append(deviceLog.getDeviceLog()).append("\n");
+            //TODO fix this strange thing...
+            stringBuilder.append(deviceLog.getMessage()).append("\n");
         }
         return stringBuilder.toString().getBytes();
     }

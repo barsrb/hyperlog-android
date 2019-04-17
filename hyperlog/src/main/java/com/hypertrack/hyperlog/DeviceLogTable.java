@@ -47,13 +47,19 @@ class DeviceLogTable {
 
     private static final String TABLE_NAME = "device_logs";
     private static final String COLUMN_ID = "_id";
-    private static final String COLUMN_DEVICE_LOG = "device_log";
+    private static final String COLUMN_LOG_LEVEL_NAME = "log_level_name";
+    private static final String COLUMN_TAG = "tag";
+    private static final String COLUMN_MESSAGE = "message";
+    private static final String COLUMN_TIMESTAMP = "timestamp";
 
     private static final String DATABASE_CREATE = "CREATE TABLE IF NOT EXISTS "
             + TABLE_NAME
             + " ("
             + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + COLUMN_DEVICE_LOG + " TEXT"
+            + COLUMN_LOG_LEVEL_NAME + " TEXT, "
+            + COLUMN_TAG + " TEXT, "
+            + COLUMN_MESSAGE + " TEXT, "
+            + COLUMN_TIMESTAMP + " TEXT"
             + ");";
 
     static void onCreate(SQLiteDatabase db) {
@@ -114,13 +120,16 @@ class DeviceLogTable {
         }
     }
 
-    static void addDeviceLog(SQLiteDatabase db, String deviceLog) {
-        if (db == null || TextUtils.isEmpty(deviceLog)) {
+    static void addDeviceLog(SQLiteDatabase db, DeviceLogModel logModel) {
+        if (db == null || TextUtils.isEmpty(logModel.getMessage())) {
             return;
         }
 
         ContentValues contentValues = new ContentValues();
-        contentValues.put(COLUMN_DEVICE_LOG, deviceLog);
+        contentValues.put(COLUMN_LOG_LEVEL_NAME, logModel.getLogLevelName());
+        contentValues.put(COLUMN_TAG, logModel.getTag());
+        contentValues.put(COLUMN_MESSAGE, logModel.getMessage());
+        contentValues.put(COLUMN_TIMESTAMP, logModel.getTimeStamp());
 
         try {
             db.insert(TABLE_NAME, null, contentValues);
@@ -190,7 +199,7 @@ class DeviceLogTable {
 
         String limit = String.valueOf(batch * DEVICE_LOG_REQUEST_QUERY_LIMIT) + ", " + String.valueOf(DEVICE_LOG_REQUEST_QUERY_LIMIT);
 
-        Cursor cursor = db.query(TABLE_NAME, new String[]{COLUMN_ID, COLUMN_DEVICE_LOG}, null, null,
+        Cursor cursor = db.query(TABLE_NAME, new String[]{COLUMN_ID, COLUMN_LOG_LEVEL_NAME, COLUMN_TAG, COLUMN_MESSAGE, COLUMN_TIMESTAMP}, null, null,
                 null, null, null, limit);
 
         if (cursor == null || cursor.isClosed()) {
@@ -204,9 +213,12 @@ class DeviceLogTable {
                         break;
                     }
 
-                    String deviceLogString = cursor.getString(1);
-                    if (!TextUtils.isEmpty(deviceLogString)) {
-                        DeviceLogModel deviceLog = new DeviceLogModel(deviceLogString);
+                    String logLevelName = cursor.getString(1);
+                    String tag = cursor.getString(2);
+                    String message = cursor.getString(3);
+                    String timeStamp = cursor.getString(4);
+                    if (!TextUtils.isEmpty(message)) {
+                        DeviceLogModel deviceLog = new DeviceLogModel(logLevelName,tag,message,timeStamp);
 
                         // Get RowId for DeviceLogModel
                         Integer rowId = Integer.valueOf(cursor.getString(0));
@@ -238,7 +250,7 @@ class DeviceLogTable {
 
             String date = HLDateTimeUtility.getFormattedTime(calendar.getTime());
 
-            db.delete(TABLE_NAME, COLUMN_DEVICE_LOG + "<?", new String[]{date});
+            db.delete(TABLE_NAME, COLUMN_TIMESTAMP + "<?", new String[]{date});
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -33,7 +33,7 @@ import java.util.List;
 interface DeviceLogDataSource {
     long getDeviceLogCount();
 
-    void addDeviceLog(String deviceLog);
+    void addDeviceLog(DeviceLogModel logModel);
 
     void deleteDeviceLog(List<DeviceLogModel> deviceLogList);
 

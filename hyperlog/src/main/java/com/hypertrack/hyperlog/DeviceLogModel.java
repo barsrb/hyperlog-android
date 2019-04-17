@@ -35,7 +35,26 @@ public class DeviceLogModel {
     @Expose(serialize = false, deserialize = false)
     private int id;
 
-    private String deviceLog;
+    //private String deviceLog;
+    private String logLevelName;
+    private String tag;
+    private String message;
+    private String timeStamp;
+
+    public DeviceLogModel(int id, String logLevelName, String tag, String message, String timeStamp) {
+        this.id = id;
+        this.logLevelName = logLevelName;
+        this.tag = tag;
+        this.message = message;
+        this.timeStamp = timeStamp;
+    }
+
+    public DeviceLogModel(String logLevelName, String tag, String message, String timeStamp) {
+        this.logLevelName = logLevelName;
+        this.tag = tag;
+        this.message = message;
+        this.timeStamp = timeStamp;
+    }
 
     public int getId() {
         return id;
@@ -45,20 +64,39 @@ public class DeviceLogModel {
         this.id = id;
     }
 
-    public String getDeviceLog() {
-        return deviceLog;
+    public String getLogLevelName() {
+        return logLevelName;
     }
 
-    public void setDeviceLog(String deviceLog) {
-        this.deviceLog = deviceLog;
+    public void setLogLevelName(String logLevelName) {
+        this.logLevelName = logLevelName;
     }
 
-    public DeviceLogModel(String deviceLog) {
-        this.deviceLog = deviceLog;
+    public String getTag() {
+        return tag;
     }
 
-    public DeviceLogModel(int id, String deviceLog) {
-        this.id = id;
-        this.deviceLog = deviceLog;
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(String timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    public String toFormatedString(LogFormat mLogFormat) {
+        return mLogFormat.formatLogMessage(logLevelName, tag, message, timeStamp);
     }
 }

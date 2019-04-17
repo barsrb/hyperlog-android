@@ -38,7 +38,7 @@ class DeviceLogDatabaseHelper extends SQLiteOpenHelper implements DeviceLogDataS
 
     private static final String TAG = DeviceLogDatabaseHelper.class.getSimpleName();
     private static final String DATABASE_NAME = "com.hypertrack.common.device_logs.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     private static DeviceLogDatabaseHelper deviceLogDatabaseHelper;
     private SQLiteDatabase database;
@@ -84,11 +84,11 @@ class DeviceLogDatabaseHelper extends SQLiteOpenHelper implements DeviceLogDataS
     }
 
     @Override
-    public void addDeviceLog(String deviceLog) {
+    public void addDeviceLog(DeviceLogModel logModel) {
         // Initialize SQLiteDatabase if null
         initializeDatabase();
 
-        DeviceLogTable.addDeviceLog(database, deviceLog);
+        DeviceLogTable.addDeviceLog(database, logModel);
     }
 
     @Override

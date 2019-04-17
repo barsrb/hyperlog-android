@@ -202,7 +202,7 @@ public class HyperLog {
         if (Log.VERBOSE >= logLevel) {
             Log.v(tag, message + '\n' + Log.getStackTraceString(tr));
         }
-        r(getFormattedLog(logLevel, tag, message));
+        r(logLevel, tag, message);
     }
 
     public static void v(String tag, String message) {
@@ -213,7 +213,7 @@ public class HyperLog {
         if (Log.DEBUG >= logLevel) {
             Log.d(tag, message + '\n' + Log.getStackTraceString(tr));
         }
-        r(getFormattedLog(logLevel, tag, message));
+        r(logLevel, tag, message);
 
     }
 
@@ -226,7 +226,7 @@ public class HyperLog {
             Log.i(tag, message + '\n' + Log.getStackTraceString(tr));
         }
 
-        r(getFormattedLog(Log.INFO, tag, message));
+        r(Log.INFO, tag, message);
     }
 
     /**
@@ -241,7 +241,7 @@ public class HyperLog {
             Log.w(tag, message + '\n' + Log.getStackTraceString(tr));
         }
 
-        r(getFormattedLog(Log.WARN, tag, message));
+        r(Log.WARN, tag, message);
     }
 
     public static void w(String tag, String message) {
@@ -253,7 +253,7 @@ public class HyperLog {
             Log.e(tag, message + '\n' + Log.getStackTraceString(tr));
         }
 
-        r(getFormattedLog(Log.ERROR, tag, message));
+        r(Log.ERROR, tag, message);
     }
 
     public static void e(String tag, String message) {
@@ -267,8 +267,7 @@ public class HyperLog {
                     Log.getStackTraceString(tr));
             Log.e(tag, "**********************************************");
         }
-        r(getFormattedLog(Log.ERROR, tag, "EXCEPTION: " + getMethodName() + ", "
-                + message));
+        r(Log.ERROR, tag, "EXCEPTION: " + getMethodName() + ", " + message);
     }
 
     public static void exception(String tag, String message) {
@@ -283,7 +282,7 @@ public class HyperLog {
     }
 
     public static void a(String message) {
-        r(getFormattedLog(Log.ASSERT, TAG_ASSERT, message));
+        r(Log.ASSERT, TAG_ASSERT, message);
     }
 
     private static String getMethodName() {
@@ -292,20 +291,26 @@ public class HyperLog {
         return e.getMethodName();
     }
 
-    private static void r(final String message) {
+    private static void r(int logLevel, final String tag, final String message){
+        r(LogFormat.getLogLevelName(logLevel), tag, message);
+    }
+    private static void r(String logLevelName, final String tag, final String message) {
         try {
 
             if (executorService == null)
                 executorService = Executors.newSingleThreadExecutor();
 
+            String timeStamp = HLDateTimeUtility.getCurrentTime();
+            final DeviceLogModel logModel = new DeviceLogModel(logLevelName, tag, message, timeStamp);
+
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        if (!isInitialize() || message == null || message.isEmpty())
+                        if (!isInitialize() || logModel.getMessage().isEmpty())
                             return;
 
-                        mDeviceLogList.addDeviceLog(message);
+                        mDeviceLogList.addDeviceLog(logModel);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -415,7 +420,7 @@ public class HyperLog {
         }
 
         for (DeviceLogModel deviceLog : deviceLogList) {
-            logsList.add(deviceLog.getDeviceLog());
+            logsList.add(deviceLog.toFormatedString(mLogFormat));
         }
 
         return logsList;
@@ -643,9 +648,9 @@ public class HyperLog {
         while (logsBatchCount != 0) {
 
             final List<DeviceLogModel> deviceLogs = getDeviceLogs(false, logsBatchCount);
-            deviceLogs.add(new DeviceLogModel(getFormattedLog(Log.INFO, TAG_HYPERLOG,
+            deviceLogs.add(new DeviceLogModel("INFO", TAG_HYPERLOG,
                     "Log Counts: " + deviceLogs.size() + " | File Size: " +
-                            deviceLogs.toString().length() + " bytes.")));
+                            deviceLogs.toString().length() + " bytes.", HLDateTimeUtility.getCurrentTime()));
             //Get string data into byte format.
             byte[] bytes = Utils.getByteData(deviceLogs);
 
@@ -702,12 +707,5 @@ public class HyperLog {
         if (!isInitialize())
             return;
         mDeviceLogList.clearSavedDeviceLogs();
-    }
-
-    private static String getFormattedLog(int logLevel, String tag, String message) {
-        if (isInitialize()) {
-            return mLogFormat.formatLogMessage(logLevel, tag, message);
-        }
-        return null;
     }
 }

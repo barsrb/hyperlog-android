@@ -55,12 +55,53 @@ public class LogFormat implements Serializable {
     /**
      * Implement this method to override the default log message format.
      *
+     * @param logLevelName The level of logcat logging that Parse should do.
+     * @param message  Log message that need to be customized.
+     * @return Formatted Log Message that will store in database.
+     */
+
+    String formatLogMessage(String logLevelName, String tag, String message, String timeStamp) {
+        int logLevel = getLogLevel(logLevelName);
+        return formatLogMessage(logLevel, tag, message, timeStamp);
+    }
+
+    private int getLogLevel(String logLevelName) {
+        int logLevel;
+        switch (logLevelName) {
+            case "VERBOSE":
+                logLevel = Log.VERBOSE;
+                break;
+            case "DEBUG":
+                logLevel = Log.DEBUG;
+                break;
+            case "INFO":
+                logLevel = Log.INFO;
+                break;
+            case "WARN":
+                logLevel = Log.WARN;
+                break;
+            case "ERROR":
+                logLevel = Log.ERROR;
+                break;
+            case "ASSERT":
+                logLevel = Log.ASSERT;
+                break;
+            default:
+                logLevel = 0;
+        }
+
+        return logLevel;
+    }
+
+    /**
+     * Implement this method to override the default log message format.
+     *
      * @param logLevel The level of logcat logging that Parse should do.
      * @param message  Log message that need to be customized.
      * @return Formatted Log Message that will store in database.
      */
-    String formatLogMessage(int logLevel, String tag, String message) {
-        String timeStamp = HLDateTimeUtility.getCurrentTime();
+
+    String formatLogMessage(int logLevel, String tag, String message, String timeStamp) {
         String senderName = BuildConfig.VERSION_NAME;
         String osVersion = "Android-" + Build.VERSION.RELEASE;
         String logLevelName = getLogLevelName(logLevel);
@@ -76,7 +117,7 @@ public class LogFormat implements Serializable {
         return timeStamp + " | " + senderName + " : " + osVersion + " | " + deviceUUID + " | " + "[" + logLevelName + "/" + tag + "]: " + message;
     }
 
-    private static String getLogLevelName(int messageLogLevel) {
+    public static String getLogLevelName(int messageLogLevel) {
 
         String logLevelName;
         switch (messageLogLevel) {

@@ -38,8 +38,8 @@ class DeviceLogList {
         this.mDeviceLogDataSource = mDeviceLogDataSource;
     }
 
-    void addDeviceLog(String deviceLog) {
-        if (TextUtils.isEmpty(deviceLog)) {
+    void addDeviceLog(DeviceLogModel deviceLog) {
+        if (TextUtils.isEmpty(deviceLog.getMessage())) {
             return;
         }
 

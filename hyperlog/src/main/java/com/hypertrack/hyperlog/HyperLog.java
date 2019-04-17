@@ -25,32 +25,34 @@ SOFTWARE.
 package com.hypertrack.hyperlog;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.hypertrack.hyperlog.error.HLErrorResponse;
 import com.hypertrack.hyperlog.utils.HLDateTimeUtility;
 import com.hypertrack.hyperlog.utils.Utils;
 import com.hypertrack.hyperlog.utils.VolleyUtils;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
+/*
  * Created by Aman on 04/10/17.
  */
+
 public class HyperLog {
 
     private static final String TAG = "HyperLog";
-    public static final String TAG_ASSERT = "ASSERT";
-    public static final String TAG_HYPERLOG = "HYPERLOG";
+    private static final String TAG_ASSERT = "ASSERT";
 
     private static int logLevel = Log.WARN;
 
@@ -129,6 +131,11 @@ public class HyperLog {
                 mDeviceLogList = new DeviceLogList(logDataSource);
                 mDeviceLogList.clearOldLogs(expiryTimeInSeconds);
             }
+
+            if(URL==null){
+                SharedPreferences sharedPref = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
+                URL = sharedPref.getString("URL", null);
+            }
         }
     }
 
@@ -162,6 +169,10 @@ public class HyperLog {
         if (TextUtils.isEmpty(url))
             throw new IllegalArgumentException("API URL cannot be null or empty");
         URL = url;
+        SharedPreferences sharedPref = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString("URL", URL);
+        editor.apply();
     }
 
     /**
@@ -291,9 +302,10 @@ public class HyperLog {
         return e.getMethodName();
     }
 
-    private static void r(int logLevel, final String tag, final String message){
+    private static void r(int logLevel, final String tag, final String message) {
         r(LogFormat.getLogLevelName(logLevel), tag, message);
     }
+
     private static void r(String logLevelName, final String tag, final String message) {
         try {
 
@@ -544,82 +556,17 @@ public class HyperLog {
         return mDeviceLogList.getDeviceLogBatchCount();
     }
 
-    /**
-     * Call this method to push logs from device to the server as a text file or gzip compressed file.
+     /**
+     * Call this method to push logs from device to the server by REST in JSON
      * <p>
-     * Logs will get delete from the device once it successfully push to the server.
+     * Log will be delete from the device if server response no error.
      * <p>
-     * If device log count is greater than {@value DeviceLogTable#DEVICE_LOG_REQUEST_QUERY_LIMIT} then
-     * log will push to the server in batches.
-     *
-     * @param mContext The current context.
-     * @param compress True, if logs will push to server in GZIP compressed format, false otherwise.
-     * @param callback Instance of {@link HLCallback}.
-     * @throws IllegalArgumentException if the API endpoint url is empty or null
-     */
-    public static void pushLogs(Context mContext, boolean compress, HLCallback callback) {
-        pushLogs(mContext, null, null, compress, callback);
-    }
-
-    /**
-     * Call this method to push logs from device to the server with custom filename as a text file
-     * or gzip compressed file.
-     * <p>
-     * Logs will get delete from the device once it successfully push to the server.
-     * <p>
-     * If device log count is greater than {@value DeviceLogTable#DEVICE_LOG_REQUEST_QUERY_LIMIT} then
-     * log will push to the server in batches.
-     *
-     * @param mContext The current context.
-     * @param fileName Name of the file that you want to receive on your server.
-     * @param compress True, if logs will push to server in GZIP compressed format, false otherwise.
-     * @param callback Instance of {@link HLCallback}.
-     * @throws IllegalArgumentException if the API endpoint url is empty or null
-     */
-    public static void pushLogs(Context mContext, String fileName, boolean compress,
-                                HLCallback callback) {
-        pushLogs(mContext, fileName, null, compress, callback);
-    }
-
-    /**
-     * Call this method to push logs from device to the server as a text file or gzip compressed file.
-     * <p>
-     * Logs will get delete from the device once it successfully push to the server.
-     * <p>
-     * If device log count is greater than {@value DeviceLogTable#DEVICE_LOG_REQUEST_QUERY_LIMIT} then
-     * log will push to the server in batches.
      *
      * @param mContext          The current context.
-     * @param additionalHeaders Additional Headers to pass along with request.
-     * @param compress          True, if logs will push to server in GZIP compressed format,
-     *                          false otherwise.
      * @param callback          Instance of {@link HLCallback}.
      * @throws IllegalArgumentException if the API endpoint url is empty or null
      */
-    public static void pushLogs(Context mContext, HashMap<String, String> additionalHeaders,
-                                boolean compress, HLCallback callback) {
-        pushLogs(mContext, null, additionalHeaders, compress, callback);
-    }
-
-    /**
-     * Call this method to push logs from device to the server with custom filename as a text file
-     * or gzip compressed file.
-     * <p>
-     * Logs will get delete from the device once it successfully push to the server.
-     * <p>
-     * If device log count is greater than {@value DeviceLogTable#DEVICE_LOG_REQUEST_QUERY_LIMIT}
-     * then log will push to the server in batches.
-     *
-     * @param fileName          Name of the file that you want to receive on your server.
-     * @param mContext          The current context.
-     * @param additionalHeaders Additional Headers to pass along with request.
-     * @param compress          True, if logs will push to server in GZIP compressed format,
-     *                          false otherwise.
-     * @param callback          Instance of {@link HLCallback}.
-     * @throws IllegalArgumentException if the API endpoint url is empty or null
-     */
-    public static void pushLogs(Context mContext, String fileName, HashMap<String,
-            String> additionalHeaders, boolean compress, final HLCallback callback) {
+    public static void pushLogs(Context mContext, final HLCallback callback) {
 
         if (!isInitialize())
             return;
@@ -636,67 +583,54 @@ public class HyperLog {
             HyperLog.e(TAG, "URL is missing. Please set the URL to push the logs.");
             return;
         }
-        if (!hasPendingDeviceLogs())
-            return;
 
-        //Check how many batches of device logs are available to push
-        int logsBatchCount = getDeviceLogBatchCount();
+        final List<DeviceLogModel> deviceLogs = getDeviceLogs(false);
 
-        final int[] temp = {logsBatchCount};
-        final boolean[] isAllLogsPushed = {true};
+        if(deviceLogs!=null)
+        {
+            final int[] logsCount = {deviceLogs.size()};
 
-        while (logsBatchCount != 0) {
+            final List<HLErrorResponse> errors = new LinkedList<>();
+            final List<Object> responses = new LinkedList<>();
 
-            final List<DeviceLogModel> deviceLogs = getDeviceLogs(false, logsBatchCount);
-            deviceLogs.add(new DeviceLogModel("INFO", TAG_HYPERLOG,
-                    "Log Counts: " + deviceLogs.size() + " | File Size: " +
-                            deviceLogs.toString().length() + " bytes.", HLDateTimeUtility.getCurrentTime()));
-            //Get string data into byte format.
-            byte[] bytes = Utils.getByteData(deviceLogs);
+            for(final DeviceLogModel logModel : deviceLogs){
+                JSONObject postparams = new JSONObject();
+                try {
+                    postparams.put("id", logModel.getId());
+                    postparams.put("level", logModel.getLogLevelName());
+                    postparams.put("tag", logModel.getTag());
+                    postparams.put("message", logModel.getMessage());
+                    postparams.put("timestamp", logModel.getTimeStamp());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                HLRequestCallback responseCallback = new HLRequestCallback() {
+                    @Override
+                    public void onSuccess(@NonNull Object response) {
+                        mDeviceLogList.deleteLog(logModel);
+                        responses.add(response);
+                        logsCount[0]--;
+                        if(logsCount[0]==0){
+                            callback.onDone(responses, errors);
+                        }
+                    }
 
-            if (TextUtils.isEmpty(fileName)) {
-                fileName = HLDateTimeUtility.getCurrentTime() + ".txt";
+                    @Override
+                    public void onError(@NonNull HLErrorResponse HLErrorResponse) {
+                        Log.e(TAG, "onError: " + HLErrorResponse.getErrorMessage());
+                        logsCount[0]--;
+                        errors.add(HLErrorResponse);
+                        if(logsCount[0]==0){
+                            callback.onDone(responses, errors);
+                        }
+                    }
+                };
+
+                HLJsonObjectRequest request = new HLJsonObjectRequest(URL, postparams, responseCallback);
+
+                VolleyUtils.addToRequestQueue(mContext, request, TAG);
             }
 
-            HLHTTPMultiPartPostRequest hlHTTPMultiPartPostRequest =
-                    new HLHTTPMultiPartPostRequest<>(URL, bytes, fileName, additionalHeaders,
-                            mContext, Object.class, compress, new Response.Listener<Object>() {
-                        @Override
-                        public void onResponse(Object response) {
-                            temp[0]--;
-                            mDeviceLogList.clearDeviceLogs(deviceLogs);
-                            HyperLog.i(TAG, "Log has been pushed");
-
-                            if (callback != null && temp[0] == 0) {
-                                if (isAllLogsPushed[0]) {
-                                    callback.onSuccess(response);
-                                } else {
-                                    HLErrorResponse HLErrorResponse = new HLErrorResponse(
-                                            "All logs hasn't been pushed");
-                                    callback.onError(HLErrorResponse);
-                                }
-                            }
-                        }
-                    }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            HLErrorResponse HLErrorResponse = new HLErrorResponse(error);
-                            isAllLogsPushed[0] = false;
-                            temp[0]--;
-                            error.printStackTrace();
-                            HyperLog.exception(TAG, "Error has occurred while pushing " +
-                                    "logs: ", error);
-
-                            if (temp[0] == 0) {
-                                if (callback != null) {
-                                    callback.onError(HLErrorResponse);
-                                }
-                            }
-                        }
-                    });
-
-            VolleyUtils.addToRequestQueue(mContext, hlHTTPMultiPartPostRequest, TAG);
-            logsBatchCount--;
         }
     }
 

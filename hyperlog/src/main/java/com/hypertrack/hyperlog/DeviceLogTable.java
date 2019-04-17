@@ -139,7 +139,7 @@ class DeviceLogTable {
         }
     }
 
-    static void deleteDeviceLog(SQLiteDatabase db, List<DeviceLogModel> deviceLogList) {
+    static void deleteDeviceLogs(SQLiteDatabase db, List<DeviceLogModel> deviceLogList) {
         if (db == null)
             return;
 
@@ -167,7 +167,23 @@ class DeviceLogTable {
             db.delete(TABLE_NAME, whereClause, null);
         } catch (Exception e) {
             e.printStackTrace();
-            HyperLog.e(TAG, "DeviceLogTable: Exception occurred while deleteDeviceLog: " + e);
+            HyperLog.e(TAG, "DeviceLogTable: Exception occurred while deleteDeviceLogs: " + e);
+        }
+    }
+
+    static void deleteDeviceLog(SQLiteDatabase db, DeviceLogModel logModel) {
+        if (db == null)
+            return;
+
+        try {
+            String whereClause = COLUMN_ID +
+                    " = " +
+                    logModel.getId();
+
+            db.delete(TABLE_NAME, whereClause, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            HyperLog.e(TAG, "DeviceLogTable: Exception occurred while deleteDeviceLogs: " + e);
         }
     }
 

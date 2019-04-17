@@ -24,26 +24,27 @@ SOFTWARE.
 */
 package com.hypertrack.hyperlog;
 
-import java.util.List;
+import android.support.annotation.NonNull;
+
+import com.hypertrack.hyperlog.error.HLErrorResponse;
 
 /**
- * Created by Aman on 22/09/17.
+ * Created by Aman Jain on 18/09/17.
  */
+public abstract class HLRequestCallback {
 
-interface DeviceLogDataSource {
-    long getDeviceLogCount();
+    /**
+     * Called when a request succeeds.
+     *
+     * @param response The successful response containing the responseObject.
+     */
+    public abstract void onSuccess(@NonNull Object response);
 
-    void addDeviceLog(DeviceLogModel logModel);
+    /**
+     * Called when a validation error occurs, request times out, or fails.
+     *
+     * @param HLErrorResponse The request status.
+     */
+    public abstract void onError(@NonNull HLErrorResponse HLErrorResponse);
 
-    void deleteDeviceLogs(List<DeviceLogModel> deviceLogList);
-
-    void deleteDeviceLog(DeviceLogModel logModel);
-
-    void deleteAllDeviceLogs();
-
-    List<DeviceLogModel> getDeviceLogs(int batch);
-
-    int getDeviceLogBatchCount();
-
-    void clearOldLogs(int expiryTimeInSeconds);
 }

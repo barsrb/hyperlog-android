@@ -58,7 +58,13 @@ class DeviceLogList {
         if (pushedDeviceLogs == null || pushedDeviceLogs.isEmpty())
             return;
 
-        this.mDeviceLogDataSource.deleteDeviceLog(pushedDeviceLogs);
+        this.mDeviceLogDataSource.deleteDeviceLogs(pushedDeviceLogs);
+    }
+
+    void deleteLog(DeviceLogModel pushedDeviceLog) {
+        if (pushedDeviceLog == null)
+            return;
+        this.mDeviceLogDataSource.deleteDeviceLog(pushedDeviceLog);
     }
 
     long count() {

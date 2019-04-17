@@ -1,4 +1,3 @@
-
 /*
 The MIT License (MIT)
 
@@ -22,28 +21,37 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-package com.hypertrack.hyperlog;
-
-import java.util.List;
 
 /**
- * Created by Aman on 22/09/17.
+ * Created by Aman on 04/10/17.
  */
 
-interface DeviceLogDataSource {
-    long getDeviceLogCount();
+package com.hypertrack.hyperlog;
 
-    void addDeviceLog(DeviceLogModel logModel);
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.hypertrack.hyperlog.error.HLErrorResponse;
 
-    void deleteDeviceLogs(List<DeviceLogModel> deviceLogList);
+import org.json.JSONObject;
 
-    void deleteDeviceLog(DeviceLogModel logModel);
+class HLJsonObjectRequest extends JsonObjectRequest{
 
-    void deleteAllDeviceLogs();
+    public HLJsonObjectRequest(String url, JSONObject jsonRequest, final HLRequestCallback callback) {
+        super(Method.POST, url, jsonRequest,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        callback.onSuccess(response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        callback.onError(new HLErrorResponse(error));
+                    }
+                });
 
-    List<DeviceLogModel> getDeviceLogs(int batch);
+    }
 
-    int getDeviceLogBatchCount();
-
-    void clearOldLogs(int expiryTimeInSeconds);
 }

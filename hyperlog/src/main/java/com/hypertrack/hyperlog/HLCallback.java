@@ -28,6 +28,8 @@ import android.support.annotation.NonNull;
 
 import com.hypertrack.hyperlog.error.HLErrorResponse;
 
+import java.util.List;
+
 /**
  * Created by Aman Jain on 18/09/17.
  */
@@ -37,14 +39,8 @@ public abstract class HLCallback {
      * Called when a request succeeds.
      *
      * @param response The successful response containing the responseObject.
-     */
-    public abstract void onSuccess(@NonNull Object response);
-
-    /**
-     * Called when a validation error occurs, request times out, or fails.
      *
      * @param HLErrorResponse The request status.
      */
-    public abstract void onError(@NonNull HLErrorResponse HLErrorResponse);
-
+    public abstract void onDone(@NonNull List<Object> response, @NonNull List<HLErrorResponse> HLErrorResponse);
 }

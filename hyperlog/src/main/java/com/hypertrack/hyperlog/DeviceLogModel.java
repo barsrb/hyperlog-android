@@ -35,7 +35,6 @@ public class DeviceLogModel {
     @Expose(serialize = false, deserialize = false)
     private int id;
 
-    //private String deviceLog;
     private String logLevelName;
     private String tag;
     private String message;

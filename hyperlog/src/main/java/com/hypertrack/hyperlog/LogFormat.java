@@ -23,18 +23,17 @@ SOFTWARE.
 */
 package com.hypertrack.hyperlog;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
 
-import com.hypertrack.hyperlog.utils.HLDateTimeUtility;
-
 import java.io.Serializable;
 
 
-/**
- * Created by Aman on 10/10/17.
+/*
+  Created by Aman on 10/10/17.
  */
 
 /**
@@ -47,6 +46,7 @@ public class LogFormat implements Serializable {
 
     private String deviceUUID;
 
+    @SuppressLint("HardwareIds")
     public LogFormat(Context context) {
         Context mContext = context.getApplicationContext();
         deviceUUID = Settings.Secure.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
@@ -101,7 +101,7 @@ public class LogFormat implements Serializable {
      * @return Formatted Log Message that will store in database.
      */
 
-    String formatLogMessage(int logLevel, String tag, String message, String timeStamp) {
+    private String formatLogMessage(int logLevel, String tag, String message, String timeStamp) {
         String senderName = BuildConfig.VERSION_NAME;
         String osVersion = "Android-" + Build.VERSION.RELEASE;
         String logLevelName = getLogLevelName(logLevel);
@@ -117,7 +117,7 @@ public class LogFormat implements Serializable {
         return timeStamp + " | " + senderName + " : " + osVersion + " | " + deviceUUID + " | " + "[" + logLevelName + "/" + tag + "]: " + message;
     }
 
-    public static String getLogLevelName(int messageLogLevel) {
+    static String getLogLevelName(int messageLogLevel) {
 
         String logLevelName;
         switch (messageLogLevel) {

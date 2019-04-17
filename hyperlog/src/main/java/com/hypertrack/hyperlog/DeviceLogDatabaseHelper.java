@@ -92,11 +92,19 @@ class DeviceLogDatabaseHelper extends SQLiteOpenHelper implements DeviceLogDataS
     }
 
     @Override
-    public void deleteDeviceLog(List<DeviceLogModel> deviceLogList) {
+    public void deleteDeviceLogs(List<DeviceLogModel> deviceLogList) {
         // Initialize SQLiteDatabase if null
         initializeDatabase();
 
-        DeviceLogTable.deleteDeviceLog(database, deviceLogList);
+        DeviceLogTable.deleteDeviceLogs(database, deviceLogList);
+    }
+
+    @Override
+    public void deleteDeviceLog(DeviceLogModel logModel) {
+        // Initialize SQLiteDatabase if null
+        initializeDatabase();
+
+        DeviceLogTable.deleteDeviceLog(database, logModel);
     }
 
     @Override

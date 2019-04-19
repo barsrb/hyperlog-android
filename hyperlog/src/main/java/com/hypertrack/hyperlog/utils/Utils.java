@@ -26,13 +26,18 @@ package com.hypertrack.hyperlog.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.provider.Settings;
 import android.text.TextUtils;
 
 import com.google.gson.GsonBuilder;
+import com.hypertrack.hyperlog.BuildConfig;
 import com.hypertrack.hyperlog.DeviceLogModel;
 import com.hypertrack.hyperlog.HyperLog;
 import com.hypertrack.hyperlog.LogFormat;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -97,13 +102,24 @@ public class Utils {
         return device_uuid != null ? device_uuid : "";
     }
 
-    public static byte[] getByteData(List<DeviceLogModel> deviceLogs) {
-        StringBuilder stringBuilder = new StringBuilder();
-        for (DeviceLogModel deviceLog : deviceLogs) {
-            //TODO fix this strange thing...
-            stringBuilder.append(deviceLog.getMessage()).append("\n");
+    public static JSONObject getPosParameters(Context context, DeviceLogModel logModel){
+        String senderName = BuildConfig.VERSION_NAME;
+        String osVersion = "Android-" + Build.VERSION.RELEASE;
+        String deviceUUID = getDeviceId(context);
+        JSONObject postparams = new JSONObject();
+        try {
+            postparams.put("id", logModel.getId());
+            postparams.put("level", logModel.getLogLevelName());
+            postparams.put("tag", logModel.getTag());
+            postparams.put("message", logModel.getMessage());
+            postparams.put("timestamp", logModel.getTimeStamp());
+            postparams.put("senderName", senderName);
+            postparams.put("osVersion", osVersion);
+            postparams.put("deviceUUID", deviceUUID);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
-        return stringBuilder.toString().getBytes();
+        return postparams;
     }
 
     public static void saveLogFormat(Context context, LogFormat logFormat) {

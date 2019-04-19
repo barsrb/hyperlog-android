@@ -603,16 +603,6 @@ public class HyperLog {
             final List<Object> responses = new LinkedList<>();
 
             for(final DeviceLogModel logModel : deviceLogs){
-                JSONObject postparams = new JSONObject();
-                try {
-                    postparams.put("id", logModel.getId());
-                    postparams.put("level", logModel.getLogLevelName());
-                    postparams.put("tag", logModel.getTag());
-                    postparams.put("message", logModel.getMessage());
-                    postparams.put("timestamp", logModel.getTimeStamp());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
                 HLRequestCallback responseCallback = new HLRequestCallback() {
                     @Override
                     public void onSuccess(@NonNull Object response) {
@@ -639,7 +629,7 @@ public class HyperLog {
                     }
                 };
 
-                HLJsonObjectRequest request = new HLJsonObjectRequest(URL, postparams, responseCallback);
+                HLJsonObjectRequest request = new HLJsonObjectRequest(URL, Utils.getPosParameters(context, logModel), responseCallback);
 
                 VolleyUtils.addToRequestQueue(mContext, request, TAG);
             }

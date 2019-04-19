@@ -132,10 +132,13 @@ public class HyperLog {
                 mDeviceLogList.clearOldLogs(expiryTimeInSeconds);
             }
 
+            SharedPreferences sharedPref = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
             if(URL==null){
-                SharedPreferences sharedPref = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
                 URL = sharedPref.getString("URL", null);
             }
+
+            int logLevel = sharedPref.getInt("LOG_LEVEL", Log.VERBOSE);
+            setLogLevel(logLevel);
 
             pushLogs(context, null);
         }
@@ -209,6 +212,10 @@ public class HyperLog {
      */
     public static void setLogLevel(int logLevel) {
         HyperLog.logLevel = logLevel;
+        SharedPreferences sharedPref = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("LOG_LEVEL", logLevel);
+        editor.apply();
     }
 
     public static void v(String tag, String message, Throwable tr) {

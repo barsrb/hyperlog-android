@@ -54,7 +54,7 @@ public class HyperLog {
     private static final String TAG = "HyperLog";
     private static final String TAG_ASSERT = "ASSERT";
 
-    private static int logLevel = Log.WARN;
+    private static int logLevel;
 
     private static DeviceLogList mDeviceLogList;
     private static String URL;
@@ -133,11 +133,11 @@ public class HyperLog {
             }
 
             SharedPreferences sharedPref = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
-            if(URL==null){
+            if (URL == null) {
                 URL = sharedPref.getString("URL", null);
             }
 
-            int logLevel = sharedPref.getInt("LOG_LEVEL", Log.VERBOSE);
+            int logLevel = sharedPref.getInt("LOG_LEVEL", Log.WARN);
             setLogLevel(logLevel);
 
             pushLogs(context, null);
@@ -219,9 +219,7 @@ public class HyperLog {
     }
 
     public static void v(String tag, String message, Throwable tr) {
-        if (Log.VERBOSE >= logLevel) {
-            Log.v(tag, message + '\n' + Log.getStackTraceString(tr));
-        }
+        Log.v(tag, message + '\n' + Log.getStackTraceString(tr));
         r(logLevel, tag, message);
     }
 
@@ -230,11 +228,8 @@ public class HyperLog {
     }
 
     public static void d(String tag, String message, Throwable tr) {
-        if (Log.DEBUG >= logLevel) {
-            Log.d(tag, message + '\n' + Log.getStackTraceString(tr));
-        }
+        Log.d(tag, message + '\n' + Log.getStackTraceString(tr));
         r(logLevel, tag, message);
-
     }
 
     public static void d(String tag, String message) {
@@ -242,10 +237,7 @@ public class HyperLog {
     }
 
     public static void i(String tag, String message, Throwable tr) {
-        if (Log.INFO >= logLevel) {
-            Log.i(tag, message + '\n' + Log.getStackTraceString(tr));
-        }
-
+        Log.i(tag, message + '\n' + Log.getStackTraceString(tr));
         r(Log.INFO, tag, message);
     }
 
@@ -257,10 +249,7 @@ public class HyperLog {
     }
 
     public static void w(String tag, String message, Throwable tr) {
-        if (Log.WARN >= logLevel) {
-            Log.w(tag, message + '\n' + Log.getStackTraceString(tr));
-        }
-
+        Log.w(tag, message + '\n' + Log.getStackTraceString(tr));
         r(Log.WARN, tag, message);
     }
 
@@ -269,10 +258,7 @@ public class HyperLog {
     }
 
     public static void e(String tag, String message, Throwable tr) {
-        if (Log.ERROR >= logLevel) {
-            Log.e(tag, message + '\n' + Log.getStackTraceString(tr));
-        }
-
+        Log.e(tag, message + '\n' + Log.getStackTraceString(tr));
         r(Log.ERROR, tag, message);
     }
 
@@ -281,12 +267,12 @@ public class HyperLog {
     }
 
     public static void exception(String tag, String message, Throwable tr) {
-        if (Log.ERROR >= logLevel) {
-            Log.e(tag, "**********************************************");
-            Log.e(tag, "EXCEPTION: " + getMethodName() + ", " + message + '\n' +
-                    Log.getStackTraceString(tr));
-            Log.e(tag, "**********************************************");
-        }
+
+        Log.e(tag, "**********************************************");
+        Log.e(tag, "EXCEPTION: " + getMethodName() + ", " + message + '\n' +
+                Log.getStackTraceString(tr));
+        Log.e(tag, "**********************************************");
+
         r(Log.ERROR, tag, "EXCEPTION: " + getMethodName() + ", " + message);
     }
 
@@ -311,13 +297,14 @@ public class HyperLog {
         return e.getMethodName();
     }
 
-    private static void r(int logLevel, final String tag, final String message) {
-        r(LogFormat.getLogLevelName(logLevel), tag, message);
+    private static void r(int loggingLevel, final String tag, final String message) {
+        if (loggingLevel >= HyperLog.logLevel) {
+            r(LogFormat.getLogLevelName(loggingLevel), tag, message);
+        }
     }
 
     private static void r(String logLevelName, final String tag, final String message) {
         try {
-
             if (executorService == null)
                 executorService = Executors.newSingleThreadExecutor();
 
@@ -565,14 +552,14 @@ public class HyperLog {
         return mDeviceLogList.getDeviceLogBatchCount();
     }
 
-     /**
+    /**
      * Call this method to push logs from device to the server by REST in JSON
      * <p>
      * Log will be delete from the device if server response no error.
      * <p>
      *
-     * @param mContext          The current context.
-     * @param callback          Instance of {@link HLCallback}.
+     * @param mContext The current context.
+     * @param callback Instance of {@link HLCallback}.
      * @throws IllegalArgumentException if the API endpoint url is empty or null
      */
     public static void pushLogs(Context mContext, final HLCallback callback) {
@@ -595,22 +582,21 @@ public class HyperLog {
 
         final List<DeviceLogModel> deviceLogs = getDeviceLogs(false);
 
-        if(deviceLogs!=null)
-        {
+        if (deviceLogs != null) {
             final int[] logsCount = {deviceLogs.size()};
 
             final List<HLErrorResponse> errors = new LinkedList<>();
             final List<Object> responses = new LinkedList<>();
 
-            for(final DeviceLogModel logModel : deviceLogs){
+            for (final DeviceLogModel logModel : deviceLogs) {
                 HLRequestCallback responseCallback = new HLRequestCallback() {
                     @Override
                     public void onSuccess(@NonNull Object response) {
                         mDeviceLogList.deleteLog(logModel);
                         responses.add(response);
                         logsCount[0]--;
-                        if(logsCount[0]==0){
-                            if(callback!=null) {
+                        if (logsCount[0] == 0) {
+                            if (callback != null) {
                                 callback.onDone(responses, errors);
                             }
                         }
@@ -621,8 +607,8 @@ public class HyperLog {
                         Log.e(TAG, "onError: " + HLErrorResponse.getErrorMessage());
                         logsCount[0]--;
                         errors.add(HLErrorResponse);
-                        if(logsCount[0]==0){
-                            if(callback!=null) {
+                        if (logsCount[0] == 0) {
+                            if (callback != null) {
                                 callback.onDone(responses, errors);
                             }
                         }
